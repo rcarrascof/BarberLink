@@ -76,6 +76,63 @@ Uses the active environment keys to dynamically bind services on startup, reduci
 
 ---
 
+## 🚀 Guía de Despliegue y Distribución (Producción)
+
+Para compilar, firmar criptográficamente y empaquetar BarberLink de forma optimizada para su publicación en **Google Play Store** y **Apple App Store**, sigue esta guía técnica paso a paso.
+
+### 1. Cargar Credenciales Nativas
+- **Android**: Descarga el archivo de configuración `google-services.json` desde tu consola de Firebase y colócalo en la ruta del proyecto: `android/app/google-services.json`.
+- **iOS**: Descarga `GoogleService-Info.plist` desde la consola de Firebase y agrégalo a tu workspace de Xcode en: `ios/BarberLink/GoogleService-Info.plist`.
+
+### 2. Configurar Firma de Producción en Android
+1. **Generar la Llave Keystore**: Ejecuta el siguiente comando en tu terminal para crear tu firma única PKCS12:
+   ```bash
+   keytool -genkeypair -v -storetype PKCS12 -keystore my-upload-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+   ```
+2. Mueve el archivo `my-upload-key.keystore` a la carpeta `android/app/`.
+3. Declara los accesos de firmado en tu archivo `android/gradle.properties`:
+   ```properties
+   MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
+   MYAPP_UPLOAD_KEY_ALIAS=my-key-alias
+   MYAPP_UPLOAD_STORE_PASSWORD=TU_CONTRASEÑA
+   MYAPP_UPLOAD_KEY_PASSWORD=TU_CONTRASEÑA
+   ```
+4. Vincula la firma en tu Gradle configurando `signingConfigs.release` en `android/app/build.gradle` asignándolo a la compilación de `buildTypes.release`.
+
+### 3. Generar Android App Bundle (.AAB)
+El formato App Bundle es el estándar requerido por Google Play Store. Compila tu archivo final optimizado ejecutando:
+```bash
+cd android && ./gradlew bundleRelease
+```
+El paquete firmado final se guardará en:
+`android/app/build/outputs/bundle/release/app-release.aab`
+
+### 4. Compilar Archivo de Distribución en iOS (Xcode Archive)
+1. Abre tu proyecto en Xcode:
+   ```bash
+   open ios/BarberLink.xcworkspace
+   ```
+2. Abre la pestaña **Signing & Capabilities** del target principal.
+3. Asegúrate de marcar **Automatically manage signing** y selecciona tu perfil de desarrollador en **Team**.
+4. Selecciona el destino de destino como **Any iOS Device (arm64)**.
+5. Haz clic en el menú superior: **Product > Archive**.
+6. En la ventana del organizador, haz clic en **Distribute App** y selecciona **App Store Connect** para cargar el binario a TestFlight o revisión de tienda.
+
+### 5. Optimización del Código (Eliminar Consolas)
+Para mejorar los tiempos de renderizado y proteger los logs de la consola en producción, hemos instalado `babel-plugin-transform-remove-console`. El archivo [babel.config.js](file:///Users/reinoldcarrasco/Documents/GitHub/BarberLink/babel.config.js) está pre-configurado para purgar automáticamente todos los `console.log` de forma condicional al compilar en modo release:
+```javascript
+module.exports = {
+  presets: ['module:@react-native/babel-preset'],
+  env: {
+    production: {
+      plugins: ['transform-remove-console'],
+    },
+  },
+};
+```
+
+---
+
 ## 📁 Project Architecture & Components
 
 ```
