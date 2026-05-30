@@ -3,6 +3,7 @@
 [![React Native](https://img.shields.io/badge/React_Native-CLI-61dafb.svg?style=flat-square&logo=react)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![ESLint](https://img.shields.io/badge/ESLint-Clean-4b32c3.svg?style=flat-square&logo=eslint)](https://eslint.org)
+[![Firebase](https://img.shields.io/badge/Firebase-SDK_12.14-orange.svg?style=flat-square&logo=firebase)](https://firebase.google.com)
 [![Aesthetics](https://img.shields.io/badge/Aesthetics-Premium_Glassmorphism-emerald.svg?style=flat-square)](#)
 
 **BarberLink** is a high-end, responsive B2B SaaS administration mobile platform developed for barbershop owners. The entire system is styled with a premium dark-mode glassmorphic interface (`#0a0a0a` background, `#10b981` emerald green highlights) and designed to run scheduling, reminders, and reservation operations through a single, shared WhatsApp Business session with multi-tenant database session routing.
@@ -49,6 +50,29 @@
 ### 8. 🛡️ GDPR & Mobile Safety Compliance (`src/components/PrivacyPolicyModal.tsx`)
 * **Privacy modal sheet**: High-fidelity B2B data safety, WhatsApp opt-in details, and encryption commitments.
 * **Compliance links**: Linked directly in the Settings dashboard and Login footer to satisfy strict Apple APNs Guideline 5.1.1 and Google Play Data Safety requirements.
+
+---
+
+## 🔥 Firebase & Push Notifications Integration
+
+BarberLink relies on **Firebase SDK v12.14** for persistent cloud state management, and incorporates custom push notification handlers designed to orchestrate and simulate WhatsApp Bot appointments in real-time.
+
+### 1. Centralized Environment Config (`src/services/config.ts`)
+We decoupled development and production databases into a dedicated configuration manager. It controls environment switches, WhatsApp bot sync rates, and database initialization keys:
+- **`DEV_CONFIG`**: Points to local mock servers and a simulated staging Firestore node.
+- **`PROD_CONFIG`**: Houses your actual production credentials from the Firebase Console.
+- **Toggle**: Changing `const ACTIVE_ENV = 'production'` automatically switches the database targets across the entire codebase.
+
+### 2. Dynamic Initialization (`src/services/firebase.ts`)
+Uses the active environment keys to dynamically bind services on startup, reducing boilerplate code:
+- **FirebaseAuth with Persistent Sessions**: Configured using `initializeAuth` coupled with a React Native `AsyncStorage` persistence layer to guarantee barbers remain logged in securely between app closes.
+- **Cloud Firestore (`db`)**: Main client database adapter instantiated to persist barbers, services, appointments, and client records.
+
+### 3. Push Notifications Handler (`src/services/notifications.ts`)
+- **Native OS Prompts**: Automatically triggers the iOS APNs or Android FCM OS prompts on startup to request user permission for Push Notifications.
+- **Device Token Retrieval**: Resolves the unique FCM Push Token (`registrationToken`) to map devices for cloud scheduling.
+- **Foreground & Background Listening**: Sets up native event listeners to receive remote server notifications.
+- **Local Autopilot Simulator**: To facilitate testing in development, the service fires a scheduled test booking notification **15 seconds after opening the app dashboard**, displaying an alert simulating an active WhatsApp client booking: *"El bot de WhatsApp está gestionando tu agenda en piloto automático."*
 
 ---
 
